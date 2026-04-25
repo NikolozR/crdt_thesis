@@ -11,8 +11,12 @@ export class NodeFactory {
     private readonly crdtFactory: CrdtFactory,
   ) {}
 
-  create(nodeId: NodeId, crdtType: CrdtType): NodeService {
-    const crdt = this.crdtFactory.create(crdtType);
-    return new NodeService(nodeId, crdtType, crdt, this.eventEmitter);
+  create(nodeId: NodeId, compare: readonly CrdtType[]): NodeService {
+    const instances = new Map<CrdtType, ReturnType<CrdtFactory['create']>>();
+    for (const t of compare) {
+      instances.set(t, this.crdtFactory.create(t));
+    }
+
+    return new NodeService(nodeId, compare, instances, this.eventEmitter);
   }
 }

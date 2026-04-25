@@ -1,14 +1,12 @@
 /**
- * Generic CRDT contract used by NodeService.
+ * Standard CRDT contract for this simulation (`ICRDT`).
  *
- * The simulation engine does not need to know CRDT internals.
- * It only relies on a consistent set of lifecycle methods:
- * - apply local operation
- * - convert local change into sync payloads
- * - merge remote payload
- * - expose user-facing state snapshot
+ * Each implementation maps the same *user-facing* local operations (see
+ * `simulation.types.ts`) to replica-specific sync payloads. Peers merge those
+ * payloads to converge; the merge rules encode the semantics you compare in
+ * the thesis (add-wins vs remove-wins, single winner vs concurrent values).
  */
-export interface Crdt<TLocalOperation, TSyncPayload, TStateView> {
+export interface ICRDT<TLocalOperation, TSyncPayload, TStateView> {
   /**
    * Applies a local operation and returns one or more sync payloads
    * that should be sent to peers. Returning arrays allows CRDTs that

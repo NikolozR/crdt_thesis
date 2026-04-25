@@ -1,4 +1,4 @@
-import { Crdt } from './crdt.interface';
+import { ICRDT } from './crdt.interface';
 import { OrSetLocalOperation } from '../simulation/simulation.types';
 
 export interface OrSetSyncAdd {
@@ -31,7 +31,7 @@ export interface OrSetStateView {
  *   therefore the element survives ("add wins").
  */
 export class OrSetCrdt
-  implements Crdt<OrSetLocalOperation, OrSetSyncPayload, OrSetStateView>
+  implements ICRDT<OrSetLocalOperation, OrSetSyncPayload, OrSetStateView>
 {
   private readonly addTagsByValue = new Map<string, Set<string>>();
   private readonly tombstonedTags = new Set<string>();

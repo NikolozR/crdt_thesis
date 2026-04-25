@@ -1,0 +1,1242 @@
+{
+  "runAt": "2026-04-25T21:48:23.121Z",
+  "totalScenarios": 14,
+  "results": [
+    {
+      "id": "s01",
+      "name": "Classic add-wins vs remove-wins under partition",
+      "description": "Node-A adds \"Apple\" and Node-B removes \"Apple\" concurrently while partitioned. Node-B has never observed the add, so its remove is causally blind to it.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "OR-Set: \"Apple\" present on all nodes (add wins). 2P-Set: \"Apple\" absent on all nodes (remove wins permanently)."
+    },
+    {
+      "id": "s02",
+      "name": "Concurrent adds of the same element",
+      "description": "Both Node-A and Node-B add \"Apple\" independently while partitioned. Tests that duplicate concurrent adds converge safely.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "Both CRDTs converge: \"Apple\" is present on all nodes. OR-Set holds two live tags; 2P-Set has one entry in the added set. No conflict — both implementations agree."
+    },
+    {
+      "id": "s03",
+      "name": "Remove of an element that was never added (phantom remove)",
+      "description": "Node-A removes \"Ghost\" which has never been added on any node. Then Node-B tries to add \"Ghost\". Tests how each CRDT handles a remove of a non-existent element.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "before_remove",
+          "state": {
+            "Node-A": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_phantom_remove",
+          "state": {
+            "Node-A": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_attempted_add",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Ghost"
+              ],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [
+                "Ghost"
+              ],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Ghost"
+              ],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "OR-Set: phantom remove is harmless (no tags to tombstone); subsequent add succeeds — \"Ghost\" appears. 2P-Set: phantom remove writes to the permanent tombstone set; subsequent add is silently blocked — \"Ghost\" never appears."
+    },
+    {
+      "id": "s04",
+      "name": "Add → remove vs re-add during partition",
+      "description": "All nodes start with \"Apple\". Partition starts. Node-B removes it (knows original tag). Node-A adds it again concurrently (fresh tag, B cannot observe it). Tests re-insertion semantics.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "after_initial_add",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "OR-Set: \"Apple\" survives — the re-add tag was unseen by B's remove. 2P-Set: \"Apple\" is gone — the permanent tombstone blocks the re-add regardless of order."
+    },
+    {
+      "id": "s05",
+      "name": "Three-way concurrent: two adds vs one remove",
+      "description": "Node-A adds \"Apple\", Node-B removes \"Apple\", Node-C adds \"Apple\" — all concurrently while partitioned. None of the three nodes observe each other's operations.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "OR-Set: \"Apple\" present — two unseen add tags survive B's blind remove. 2P-Set: \"Apple\" absent — one remove permanently wins over any number of concurrent adds."
+    },
+    {
+      "id": "s06",
+      "name": "Sequential add → remove → re-add (no partition)",
+      "description": "All operations happen on Node-A with the network healthy throughout. Tests that causally ordered operations converge identically and that re-add after a causal remove behaves differently across CRDTs.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "after_add",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_remove",
+          "state": {
+            "Node-A": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_re_add",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "After add→remove both agree: \"Apple\" absent. After re-add: OR-Set brings \"Apple\" back (new tag); 2P-Set permanently blocks re-add (tombstone is forever)."
+    },
+    {
+      "id": "s07",
+      "name": "Concurrent removes of an element both nodes observed",
+      "description": "All nodes first receive \"Apple\" via healthy sync. Partition starts. Node-A and Node-B both remove \"Apple\" independently — each knows the original tag.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "after_initial_add",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple"
+              ],
+              "2p-set": [
+                "Apple"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-B": {
+              "or-set": [],
+              "2p-set": []
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        }
+      ],
+      "conclusion": "Both CRDTs agree: \"Apple\" is absent after reconnect. Duplicate remove messages are idempotent in both implementations. No divergence when all concurrent ops are removes."
+    },
+    {
+      "id": "s08",
+      "name": "Multiple elements with mixed concurrent operations",
+      "description": "During partition: Node-A adds \"Apple\" and \"Banana\"; Node-B removes \"Apple\" and adds \"Cherry\". Tests that conflict resolution is applied per-element independently.",
+      "family": "set",
+      "crdts": [
+        "or-set",
+        "2p-set"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple",
+                "Banana"
+              ],
+              "2p-set": [
+                "Apple",
+                "Banana"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Cherry"
+              ],
+              "2p-set": [
+                "Cherry"
+              ]
+            },
+            "Node-C": {
+              "or-set": [],
+              "2p-set": []
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "or-set": [
+                "Apple",
+                "Banana",
+                "Cherry"
+              ],
+              "2p-set": [
+                "Banana",
+                "Cherry"
+              ]
+            },
+            "Node-B": {
+              "or-set": [
+                "Apple",
+                "Banana",
+                "Cherry"
+              ],
+              "2p-set": [
+                "Banana",
+                "Cherry"
+              ]
+            },
+            "Node-C": {
+              "or-set": [
+                "Apple",
+                "Banana",
+                "Cherry"
+              ],
+              "2p-set": [
+                "Banana",
+                "Cherry"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "OR-Set final set: [\"Apple\",\"Banana\",\"Cherry\"] — Apple survives (add-wins), others uncontested. 2P-Set final set: [\"Banana\",\"Cherry\"] — Apple tombstoned (remove-wins), others uncontested. Per-element resolution means only \"Apple\" diverges between the two CRDTs."
+    },
+    {
+      "id": "r01",
+      "name": "Concurrent set on two nodes",
+      "description": "Node-A sets value \"X\" and Node-B sets value \"Y\" concurrently while partitioned. Both writes happen at logical timestamp 1 — a true tie.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "X",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "X"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Y"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": null,
+                "timestamp": -9007199254740991,
+                "actorId": null
+              },
+              "mv-register": []
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "X",
+                "Y"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "X",
+                "Y"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "X",
+                "Y"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "LWW: one value survives (\"Y\" wins — \"Node-B\" > \"Node-A\" as tie-breaker); \"X\" is silently lost. MV: both values retained — [\"X\",\"Y\"]; no information loss, but conflict exposed to the application."
+    },
+    {
+      "id": "r02",
+      "name": "Sequential sets with no partition",
+      "description": "Node-A sets \"X\" (network healthy — all nodes receive it). Then Node-B sets \"Y\". Tests causally ordered writes where no conflict exists.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "after_first_set",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "X",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "X"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "X",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "X"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "X",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "X"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_second_set",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Y"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Y"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Y"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "Both LWW and MV converge to \"Y\" on all nodes. MV shows a single value (not an array of conflicts) because B's lamport is strictly higher than A's. No divergence when causal order is respected."
+    },
+    {
+      "id": "r03",
+      "name": "Triple concurrent set on all three nodes",
+      "description": "All three nodes set different values (X, Y, Z) concurrently while partitioned. Maximum conflict scenario — three-way tie at lamport=1.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "X",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "X"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Y",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Y"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Z",
+                "timestamp": 1,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "Z"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Z",
+                "timestamp": 1,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "X",
+                "Y",
+                "Z"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Z",
+                "timestamp": 1,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "X",
+                "Y",
+                "Z"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Z",
+                "timestamp": 1,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "X",
+                "Y",
+                "Z"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "LWW: \"Z\" wins (Node-C has lexicographically highest actorId); X and Y silently lost. MV: all three values retained — [\"X\",\"Y\",\"Z\"]. Illustrates maximum information loss in LWW vs maximum conflict exposure in MV."
+    },
+    {
+      "id": "r04",
+      "name": "Shared baseline then concurrent divergence and causal resolution",
+      "description": "All nodes agree on \"V1\". After partition, Node-A writes \"V2\" and Node-B writes \"V3\" concurrently. After reconnect, Node-C writes \"V4\" causally after the merge — should resolve MV conflict.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "after_baseline",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "V1",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "V1"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "V1",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "V1"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "V1",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "V1"
+              ]
+            }
+          }
+        },
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "V2",
+                "timestamp": 2,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "V2"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "V3",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "V3"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "V1",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "V1"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "V3",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "V2",
+                "V3"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "V3",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "V2",
+                "V3"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "V3",
+                "timestamp": 2,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "V2",
+                "V3"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_causal_write",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "V4",
+                "timestamp": 3,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "V4"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "V4",
+                "timestamp": 3,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "V4"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "V4",
+                "timestamp": 3,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "V4"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "After reconnect — LWW: \"V3\" (Node-B wins tie); MV: [\"V2\",\"V3\"]. After Node-C's causal write — LWW: \"V4\"; MV: [\"V4\"] — conflict collapses once a strictly later write arrives."
+    },
+    {
+      "id": "r05",
+      "name": "Concurrent identical writes on two nodes",
+      "description": "Node-A and Node-B both set the same value \"SameValue\" concurrently while partitioned. Tests idempotent handling of duplicate values in MV-Register.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "during_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "SameValue",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "SameValue"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "SameValue",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "SameValue"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": null,
+                "timestamp": -9007199254740991,
+                "actorId": null
+              },
+              "mv-register": []
+            }
+          }
+        },
+        {
+          "label": "after_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "SameValue",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "SameValue"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "SameValue",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "SameValue"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "SameValue",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "SameValue"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "Both CRDTs converge to \"SameValue\" on all nodes. MV-Register deduplicates: shows [\"SameValue\"] not [\"SameValue\",\"SameValue\"]. No divergence when concurrent writes carry the same value."
+    },
+    {
+      "id": "r06",
+      "name": "Multiple partition/reconnect cycles",
+      "description": "Two partition/reconnect cycles each with concurrent writes. Tests that logical clocks advance across cycles and old conflicts are superseded by newer writes.",
+      "family": "register",
+      "crdts": [
+        "lww-register",
+        "mv-register"
+      ],
+      "snapshots": [
+        {
+          "label": "after_cycle1_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Round1-A",
+                "timestamp": 1,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "Round1-A"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Round1-B",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Round1-B"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": null,
+                "timestamp": -9007199254740991,
+                "actorId": null
+              },
+              "mv-register": []
+            }
+          }
+        },
+        {
+          "label": "after_cycle1_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Round1-B",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Round1-A",
+                "Round1-B"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Round1-B",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Round1-A",
+                "Round1-B"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Round1-B",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Round1-A",
+                "Round1-B"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_cycle2_partition",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Round2-A",
+                "timestamp": 2,
+                "actorId": "Node-A"
+              },
+              "mv-register": [
+                "Round2-A"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Round1-B",
+                "timestamp": 1,
+                "actorId": "Node-B"
+              },
+              "mv-register": [
+                "Round1-A",
+                "Round1-B"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Round2-C",
+                "timestamp": 2,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "Round2-C"
+              ]
+            }
+          }
+        },
+        {
+          "label": "after_cycle2_reconnect",
+          "state": {
+            "Node-A": {
+              "lww-register": {
+                "value": "Round2-C",
+                "timestamp": 2,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "Round2-A",
+                "Round2-C"
+              ]
+            },
+            "Node-B": {
+              "lww-register": {
+                "value": "Round2-C",
+                "timestamp": 2,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "Round2-A",
+                "Round2-C"
+              ]
+            },
+            "Node-C": {
+              "lww-register": {
+                "value": "Round2-C",
+                "timestamp": 2,
+                "actorId": "Node-C"
+              },
+              "mv-register": [
+                "Round2-A",
+                "Round2-C"
+              ]
+            }
+          }
+        }
+      ],
+      "conclusion": "After cycle 1: LWW converges to one value; MV may show a conflict. After cycle 2: both LWW and MV converge — cycle-2 writes have strictly higher lamport timestamps so they dominate, and MV collapses back to the concurrent set of the latest cycle."
+    }
+  ]
+}

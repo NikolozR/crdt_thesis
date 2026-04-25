@@ -20,16 +20,21 @@ import { CrdtType, NodeId, NodeOperation } from './simulation/simulation.types';
 
 class InitSimulationBody {
   /**
-   * Choose which CRDT implementation all virtual nodes will use in this run.
+   * CRDT engines to run side-by-side on every virtual node (same operations,
+   * same sync traffic, different merge semantics).
    */
-  @ApiProperty({ enum: ['or-set', 'lww-register'] })
-  readonly crdtType!: CrdtType;
+  @ApiProperty({
+    type: [String],
+    enum: ['or-set', '2p-set', 'lww-register', 'mv-register'],
+    example: ['or-set', '2p-set'],
+  })
+  readonly compare!: CrdtType[];
 }
 
 class OperateNodeBody {
   /**
-   * Operation is intentionally polymorphic because the simulation supports
-   * two CRDT families with distinct operation shapes.
+   * Operation is intentionally polymorphic: set runs use `{ type: "set" }`;
+   * set-CRDT comparisons use `{ type: "add" | "remove" }`.
    */
   @ApiProperty({
     oneOf: [
@@ -70,30 +75,33 @@ export class AppController {
     private readonly networkSimulator: NetworkSimulatorService,
   ) {}
 
-  @ApiOperation({ summary: 'Initialize 3 virtual nodes with selected CRDT type' })
+  @ApiOperation({
+    summary: 'Initialize 3 virtual nodes with side-by-side CRDT engines',
+  })
   @ApiBody({
     type: InitSimulationBody,
     examples: {
-      orSet: {
-        summary: 'Initialize for OR-Set run',
-        value: { crdtType: 'or-set' },
+      orVs2p: {
+        summary: 'Compare OR-Set (add-wins) vs 2P-Set (remove-wins)',
+        value: { compare: ['or-set', '2p-set'] },
       },
-      lww: {
-        summary: 'Initialize for LWW register run',
-        value: { crdtType: 'lww-register' },
+      lwwVsMv: {
+        summary: 'Compare LWW vs MV register under concurrent writes',
+        value: { compare: ['lww-register', 'mv-register'] },
       },
     },
   })
   @ApiResponse({ status: 201, description: 'Simulation initialized' })
   @Post('simulation/init')
   initSimulation(@Body() body: InitSimulationBody): unknown {
-    if (body.crdtType !== 'or-set' && body.crdtType !== 'lww-register') {
-      throw new BadRequestException('crdtType must be either "or-set" or "lww-register"');
+    if (!Array.isArray(body.compare)) {
+      throw new BadRequestException('Body must include a "compare" array of CRDT ids.');
     }
 
     return {
-      message: 'Simulation initialized with three virtual nodes.',
-      ...this.simulationService.init(body.crdtType),
+      message:
+        'Simulation initialized with three virtual nodes and side-by-side CRDT engines.',
+      ...this.simulationService.init(body.compare),
     };
   }
 
@@ -127,15 +135,15 @@ export class AppController {
     type: OperateNodeBody,
     examples: {
       orSetAdd: {
-        summary: 'OR-Set add',
+        summary: 'Set CRDTs: add',
         value: { operation: { type: 'add', value: 'Apple' } },
       },
       orSetRemove: {
-        summary: 'OR-Set remove',
+        summary: 'Set CRDTs: remove',
         value: { operation: { type: 'remove', value: 'Apple' } },
       },
       lwwSet: {
-        summary: 'LWW set',
+        summary: 'Register CRDTs: set',
         value: { operation: { type: 'set', value: 'Version-2' } },
       },
     },
@@ -154,7 +162,9 @@ export class AppController {
     };
   }
 
-  @ApiOperation({ summary: 'Get current local state of all virtual nodes' })
+  @ApiOperation({
+    summary: 'Get current local state of all virtual nodes (per-engine snapshots)',
+  })
   @Get('simulation/state')
   getSimulationState(): unknown {
     return this.simulationService.getState();

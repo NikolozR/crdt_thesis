@@ -1,4 +1,4 @@
-import { Crdt } from './crdt.interface';
+import { ICRDT } from './crdt.interface';
 import { LwwLocalOperation } from '../simulation/simulation.types';
 
 export interface LwwSyncPayload {
@@ -25,7 +25,7 @@ export interface LwwRegisterStateView {
  *   as a deterministic tie-breaker to avoid divergence.
  */
 export class LwwRegisterCrdt
-  implements Crdt<LwwLocalOperation, LwwSyncPayload, LwwRegisterStateView>
+  implements ICRDT<LwwLocalOperation, LwwSyncPayload, LwwRegisterStateView>
 {
   private value: string | null = null;
   private timestamp = Number.MIN_SAFE_INTEGER;

@@ -1,0 +1,94 @@
+import { ICRDT } from './crdt.interface';
+import { LwwLocalOperation } from '../simulation/simulation.types';
+
+export interface MvRegisterSyncPayload {
+  readonly kind: 'mv-set';
+  readonly lamport: number;
+  readonly actorId: string;
+  readonly value: string;
+}
+
+export interface MvRegisterStateView {
+  readonly type: 'mv-register';
+  /**
+   * All values tied at the maximum Lamport timestamp among observed writes.
+   * Concurrent partitioned writes often share the same timestamp before causal
+   * advancement; unlike LWW, we **retain every value** at that maximum layer.
+   */
+  readonly values: string[];
+  readonly lamport: number;
+}
+
+/**
+ * Multi-Value Register (MV-Register) — contrasts LWW by **not** collapsing
+ * concurrent updates to a single winner.
+ *
+ * Model (intuitive):
+ * - Each replica maintains a Lamport clock. A local `set` bumps the clock and
+ *   records `(lamport, actorId, value)`.
+ * - On merge, the clock advances to `max(local, remote)` so causal order is respected.
+ * - **Read result**: among all observed writes, take the maximum `lamport`;
+ *   return the **set of values** written at that timestamp (union if multiple
+ *   replicas wrote at the same logical time while partitioned).
+ *
+ * After replicas exchange messages, a later local write typically increases
+ * lamport above the concurrent layer, and the register then shows a single value
+ * again — unless another concurrent write again ties at the new maximum.
+ */
+export class MvRegisterCrdt
+  implements ICRDT<LwwLocalOperation, MvRegisterSyncPayload, MvRegisterStateView>
+{
+  private clock = 0;
+
+  /** Dedup key → present */
+  private readonly seen = new Set<string>();
+
+  private readonly events: MvRegisterSyncPayload[] = [];
+
+  applyLocalOperation(
+    operation: LwwLocalOperation,
+    actorId: string,
+  ): MvRegisterSyncPayload[] {
+    this.clock += 1;
+    const payload: MvRegisterSyncPayload = {
+      kind: 'mv-set',
+      lamport: this.clock,
+      actorId,
+      value: operation.value,
+    };
+
+    this.ingest(payload);
+    return [payload];
+  }
+
+  merge(payload: MvRegisterSyncPayload): void {
+    this.ingest(payload);
+  }
+
+  private ingest(payload: MvRegisterSyncPayload): void {
+    const key = `${payload.lamport}|${payload.actorId}|${payload.value}`;
+    if (this.seen.has(key)) {
+      return;
+    }
+
+    this.seen.add(key);
+    this.events.push(payload);
+    this.clock = Math.max(this.clock, payload.lamport);
+  }
+
+  getStateView(): MvRegisterStateView {
+    if (this.events.length === 0) {
+      return { type: 'mv-register', values: [], lamport: 0 };
+    }
+
+    const maxLamport = this.events.reduce((m, e) => Math.max(m, e.lamport), 0);
+    const atMax = this.events.filter((e) => e.lamport === maxLamport);
+    const values = Array.from(new Set(atMax.map((e) => e.value))).sort();
+
+    return {
+      type: 'mv-register',
+      values,
+      lamport: maxLamport,
+    };
+  }
+}
