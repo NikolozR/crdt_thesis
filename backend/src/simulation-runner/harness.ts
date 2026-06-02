@@ -7,13 +7,6 @@ import { CrdtType, NodeId, NodeOperation } from '../simulation/simulation.types'
 
 const ALL_NODE_IDS: NodeId[] = ['Node-A', 'Node-B', 'Node-C'];
 
-/**
- * Lightweight in-process harness that wires up the same services used by the
- * REST application — but without the NestJS DI container or HTTP layer.
- *
- * The @OnEvent decorator used by NetworkSimulatorService is inert outside NestJS,
- * so we manually subscribe the emitter to call onSyncMessage directly.
- */
 export class SimulationHarness {
   private readonly network: NetworkSimulatorService;
   private readonly nodes = new Map<NodeId, NodeService>();
@@ -50,7 +43,6 @@ export class SimulationHarness {
     node.executeLocalOperation(operation, ALL_NODE_IDS);
   }
 
-  /** Returns a deep-cloned snapshot of every node's per-engine state. */
   snapshot(): Record<NodeId, Record<string, unknown>> {
     const out = {} as Record<NodeId, Record<string, unknown>>;
     for (const [id, node] of this.nodes) {

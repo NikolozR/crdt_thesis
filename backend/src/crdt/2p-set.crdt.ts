@@ -18,25 +18,10 @@ export interface TwoPhaseSetStateView {
   readonly elements: string[];
 }
 
-/**
- * Two-Phase Set (2P-Set) with **remove-wins** semantics.
- *
- * Why this contrasts with OR-Set (add-wins):
- * - We keep a permanent tombstone set for removed elements.
- * - If an element was ever removed on this replica (or learned via sync),
- *   subsequent adds of that same element are ignored: **remove wins**, and the
- *   element can never reappear.
- *
- * This is a standard pedagogical CRDT for showing how policy choices (tombstone
- * permanence) change outcomes under the same add/remove operation stream.
- */
 export class TwoPhaseSetCrdt
   implements ICRDT<OrSetLocalOperation, TwoPhaseSetSyncPayload, TwoPhaseSetStateView>
 {
-  /** Elements currently considered present (modulo tombstones). */
   private readonly added = new Set<string>();
-
-  /** Tombstones: once removed, the value cannot be added back. */
   private readonly removed = new Set<string>();
 
   applyLocalOperation(
@@ -45,10 +30,6 @@ export class TwoPhaseSetCrdt
   ): TwoPhaseSetSyncPayload[] {
     if (operation.type === 'add') {
       if (this.removed.has(operation.value)) {
-        /**
-         * Remove-wins: a prior remove (possibly learned during merge) blocks
-         * re-insertion, unlike OR-Set where a fresh unique tag can resurrect.
-         */
         return [];
       }
 

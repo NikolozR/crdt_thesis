@@ -1,21 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * S08 — Multiple elements with mixed concurrent operations.
- *
- * During partition:
- *   Node-A: add "Apple", add "Banana"
- *   Node-B: remove "Apple", add "Cherry"
- *
- * Expected after reconnect:
- *   OR-Set:  "Apple" present (B's remove had no tags for A's add),
- *            "Banana" present, "Cherry" present  → ["Apple","Banana","Cherry"]
- *   2P-Set:  "Apple" absent (tombstoned), "Banana" present, "Cherry" present
- *            → ["Banana","Cherry"]
- *
- * Shows that conflict resolution is per-element, not global.
- */
 export function s08MultipleElementsMixedOps(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

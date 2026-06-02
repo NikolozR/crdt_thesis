@@ -3,15 +3,6 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { NodeId } from '../simulation/simulation.types';
 import { NodeService, NodeSyncMessage } from '../node/node.service';
 
-/**
- * Central in-memory router for the simulation.
- *
- * Why this design is useful academically:
- * - It isolates "network behavior" from CRDT behavior.
- * - You can toggle partitions deterministically and observe impact.
- * - The queued-message buffer explicitly models delayed delivery
- *   and replay during a healing/merge phase.
- */
 @Injectable()
 export class NetworkSimulatorService {
   private readonly nodes = new Map<NodeId, NodeService>();
@@ -42,11 +33,6 @@ export class NetworkSimulatorService {
   @OnEvent('sync.message')
   onSyncMessage(message: NodeSyncMessage): void {
     if (this.isPartitioned) {
-      /**
-       * During partition we retain messages in FIFO order.
-       * FIFO is not mandatory for CRDT correctness in general, but keeping
-       * deterministic replay order makes debugging and thesis demos clearer.
-       */
       this.queuedMessages.push(message);
       return;
     }

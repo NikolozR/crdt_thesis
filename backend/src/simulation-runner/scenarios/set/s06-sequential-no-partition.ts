@@ -1,18 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * S06 — Sequential operations with no partition: add then remove.
- *
- * With no partition all sync messages are delivered immediately, so every
- * operation is fully causally ordered. Both CRDTs must agree on the final state.
- *
- * OR-Set:  add creates a tag; remove observes and tombstones it → "Apple" absent.
- * 2P-Set:  add then remove → tombstone set has "Apple" → "Apple" absent.
- *
- * Both converge: remove wins when causal order is respected.
- * This is the baseline "no conflict" scenario.
- */
 export function s06SequentialNoPartition(harness: SimulationHarness): ScenarioResult {
   harness.operate('Node-A', { type: 'add', value: 'Apple' });
 
@@ -22,7 +10,6 @@ export function s06SequentialNoPartition(harness: SimulationHarness): ScenarioRe
 
   const afterRemove = harness.snapshot();
 
-  // Confirm re-add is possible in OR-Set but not in 2P-Set
   harness.operate('Node-A', { type: 'add', value: 'Apple' });
 
   const afterReAdd = harness.snapshot();

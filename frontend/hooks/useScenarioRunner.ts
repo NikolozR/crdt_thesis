@@ -12,22 +12,14 @@ export interface ScenarioHandlers {
 }
 
 export interface ScenarioRunnerState {
-  /** A scenario is loaded (regardless of progress). */
   isActive: boolean;
-  /** An API call is currently in flight for the executing step. */
   isExecuting: boolean;
-  /** All steps have been executed. */
   isDone: boolean;
   activeScenario: GuidedScenario | null;
-  /** 0-based index of the NEXT step to execute. */
   nextStepIndex: number;
-  /** The step that will execute on the next click, null when done. */
   nextStep: ScenarioStep | null;
-  /** Load a scenario and reset progress — does NOT execute anything yet. */
   load: (scenario: GuidedScenario) => void;
-  /** Execute the next pending step. No-op while already executing or done. */
   executeStep: () => Promise<void>;
-  /** Unload the scenario and return to idle. */
   reset: () => void;
 }
 
@@ -51,14 +43,6 @@ async function dispatchStep(
   }
 }
 
-/**
- * Step-by-step scenario runner.
- *
- * The user controls the pace — each call to `executeStep` fires exactly one
- * API action and waits for completion before enabling the next step.
- * Handler references are stored in a ref so async calls always use the latest
- * closures even if the parent component re-renders between steps.
- */
 export function useScenarioRunner(handlers: ScenarioHandlers): ScenarioRunnerState {
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
@@ -80,15 +64,10 @@ export function useScenarioRunner(handlers: ScenarioHandlers): ScenarioRunnerSta
   }, []);
 
   const executeStep = useCallback(async () => {
-    // Read current values via refs to avoid stale closure issues
-    setActiveScenario((scenario) => {
-      // We only need the scenario ref here — the real work happens below
-      return scenario;
-    });
+    setActiveScenario((scenario) => scenario);
 
     if (isExecuting) return;
 
-    // Capture current values synchronously before any await
     const scenario = activeScenario;
     const index = nextStepIndex;
 

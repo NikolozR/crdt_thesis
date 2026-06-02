@@ -1,15 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * S02 — Both nodes add the same element while partitioned.
- *
- * OR-Set:  each add generates a unique tag → after merge both tags are live
- *          → "Apple" present (element has 2 live tags, neither tombstoned).
- * 2P-Set:  both add to their local `added` set → after merge "Apple" present.
- *
- * Both CRDTs agree here. This confirms idempotence of concurrent adds.
- */
 export function s02ConcurrentAddsSameElement(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

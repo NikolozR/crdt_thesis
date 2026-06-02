@@ -1,16 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * R05 — Both nodes set the same value concurrently while partitioned.
- *
- * LWW:  same value, same timestamp — tie-break by actorId still picks one.
- *       End result is the same value regardless, but only one write "wins".
- * MV:   two events at lamport=1 with the same value → deduplication in
- *       getStateView collapses them → ["SameValue"] (not duplicated).
- *
- * Tests idempotence of concurrent identical writes in MV-Register.
- */
 export function r05SameValueConcurrent(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

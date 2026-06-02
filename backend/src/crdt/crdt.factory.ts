@@ -12,11 +12,6 @@ import { MvRegisterCrdt, MvRegisterStateView, MvRegisterSyncPayload } from './mv
 import { OrSetCrdt, OrSetStateView, OrSetSyncPayload } from './or-set.crdt';
 import { PwSetCrdt, PwSetStateView, PwSetSyncPayload } from './pw-set.crdt';
 
-/**
- * Union of all concrete CRDT instances used in side-by-side comparison runs.
- * Each shares the same *family* of local operations (set vs add/remove) with
- * its sibling implementations.
- */
 export type SupportedCrdtInstance =
   | ICRDT<OrSetLocalOperation, OrSetSyncPayload, OrSetStateView>
   | ICRDT<OrSetLocalOperation, TwoPhaseSetSyncPayload, TwoPhaseSetStateView>

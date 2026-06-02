@@ -1,7 +1,5 @@
 import { CrdtType, NodeId, NodeOperation } from './types';
 
-// ── Step types ─────────────────────────────────────────────────────────────
-
 type InitStep      = { kind: 'init';      label: string; compare: CrdtType[] };
 type PartitionStep = { kind: 'partition'; label: string };
 type ReconnectStep = { kind: 'reconnect'; label: string };
@@ -16,15 +14,6 @@ export interface GuidedScenario {
   steps: ScenarioStep[];
 }
 
-// ── Scenario definitions ───────────────────────────────────────────────────
-
-/**
- * The Troll Problem — shows where OR-Set fails and PW-Set succeeds.
- * Admin (weight=100) removes "Spam" concurrently with a user (weight=10) adding it.
- * OR-Set: add always wins → "Spam" survives (wrong).
- * 2P-Set: remove wins but permanently (correct here, but blocks future re-adds).
- * PW-Set: higher weight wins → "Spam" absent (correct, and reversible).
- */
 const trollProblem: GuidedScenario = {
   id: 'troll-problem',
   name: 'The Troll Problem',
@@ -61,12 +50,6 @@ const trollProblem: GuidedScenario = {
   ],
 };
 
-/**
- * Register Conflict — shows LWW silently discarding a write vs MV preserving both.
- * Two nodes set different values while partitioned.
- * LWW: one value wins (the other is lost with no trace).
- * MV: both values are retained, conflict is visible to the application.
- */
 const registerConflict: GuidedScenario = {
   id: 'register-conflict',
   name: 'Register Conflict',

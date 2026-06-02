@@ -10,37 +10,15 @@ export interface MvRegisterSyncPayload {
 
 export interface MvRegisterStateView {
   readonly type: 'mv-register';
-  /**
-   * All values tied at the maximum Lamport timestamp among observed writes.
-   * Concurrent partitioned writes often share the same timestamp before causal
-   * advancement; unlike LWW, we **retain every value** at that maximum layer.
-   */
   readonly values: string[];
   readonly lamport: number;
 }
 
-/**
- * Multi-Value Register (MV-Register) — contrasts LWW by **not** collapsing
- * concurrent updates to a single winner.
- *
- * Model (intuitive):
- * - Each replica maintains a Lamport clock. A local `set` bumps the clock and
- *   records `(lamport, actorId, value)`.
- * - On merge, the clock advances to `max(local, remote)` so causal order is respected.
- * - **Read result**: among all observed writes, take the maximum `lamport`;
- *   return the **set of values** written at that timestamp (union if multiple
- *   replicas wrote at the same logical time while partitioned).
- *
- * After replicas exchange messages, a later local write typically increases
- * lamport above the concurrent layer, and the register then shows a single value
- * again — unless another concurrent write again ties at the new maximum.
- */
 export class MvRegisterCrdt
   implements ICRDT<LwwLocalOperation, MvRegisterSyncPayload, MvRegisterStateView>
 {
   private clock = 0;
 
-  /** Dedup key → present */
   private readonly seen = new Set<string>();
 
   private readonly events: MvRegisterSyncPayload[] = [];

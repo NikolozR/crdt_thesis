@@ -1,12 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * S01 — Classic partition: add on A, remove on B (element never seen by B).
- *
- * OR-Set:  add-wins  → "Apple" survives because B's remove carried no tags.
- * 2P-Set:  remove-wins → "Apple" is permanently tombstoned once B's remove arrives.
- */
 export function s01AddWinsVsRemoveWins(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

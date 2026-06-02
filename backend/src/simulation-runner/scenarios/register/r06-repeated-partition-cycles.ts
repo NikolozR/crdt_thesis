@@ -1,22 +1,7 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * R06 — Multiple partition/reconnect cycles with writes in each cycle.
- *
- * Cycle 1: partition → A sets "Round1-A", B sets "Round1-B" → reconnect.
- * Cycle 2: partition → A sets "Round2-A", C sets "Round2-C" → reconnect.
- *
- * After cycle 1 reconnect: clocks advance (LWW picks one; MV resolves conflict).
- * After cycle 2 reconnect: new writes are at strictly higher lamport than cycle-1
- *   writes → both CRDTs should converge cleanly because cycle-2 writes causally
- *   dominate cycle-1 writes.
- *
- * Tests that clocks advance correctly across multiple heal/partition cycles and
- * that old conflicts don't linger in MV after they are superseded.
- */
 export function r06RepeatedPartitionCycles(harness: SimulationHarness): ScenarioResult {
-  // Cycle 1
   harness.partition();
   harness.operate('Node-A', { type: 'set', value: 'Round1-A' });
   harness.operate('Node-B', { type: 'set', value: 'Round1-B' });
@@ -27,7 +12,6 @@ export function r06RepeatedPartitionCycles(harness: SimulationHarness): Scenario
 
   const afterCycle1Reconnect = harness.snapshot();
 
-  // Cycle 2
   harness.partition();
   harness.operate('Node-A', { type: 'set', value: 'Round2-A' });
   harness.operate('Node-C', { type: 'set', value: 'Round2-C' });

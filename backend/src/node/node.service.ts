@@ -20,16 +20,6 @@ export interface NodeSyncMessage {
   readonly payload: unknown;
 }
 
-/**
- * Represents one virtual replica in the simulation.
- *
- * Side-by-side engines:
- * - The same user operation (add/remove or set) is applied to every *compatible*
- *   active engine so semantics diverge only inside merge rules.
- * - Sync traffic remains one `sync.message` per engine payload (`crdtType` tags
- *   which replica implementation the payload belongs to). Peers apply a
- *   payload only to the matching engine — wire formats differ per CRDT.
- */
 export class NodeService {
   private readonly engines = new Map<CrdtType, SupportedCrdtInstance>();
 
@@ -83,10 +73,6 @@ export class NodeService {
     }
   }
 
-  /**
-   * Delivers the same bus message to every engine; each engine merges only if
-   * `message.crdtType` matches its id (payload schemas are per implementation).
-   */
   receiveSyncMessage(message: NodeSyncMessage): void {
     for (const [engineId, engine] of this.engines) {
       if (message.crdtType !== engineId) {
@@ -97,9 +83,6 @@ export class NodeService {
     }
   }
 
-  /**
-   * Per-engine snapshots for thesis comparison (flattened where helpful).
-   */
   getState(): Record<string, unknown> {
     const out: Record<string, unknown> = {};
 

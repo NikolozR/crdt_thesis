@@ -1,15 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * R01 — Classic concurrent set: A sets X, B sets Y while partitioned.
- *
- * LWW-Register:  Both writes carry logical clock = 1 (each replica started at 0
- *                and incremented once). Tie-broken by actorId string comparison:
- *                "Node-B" > "Node-A" → Node-B's value "Y" wins everywhere.
- * MV-Register:   Both writes are at lamport=1. No single winner — both "X" and "Y"
- *                are retained as concurrent values: ["X","Y"].
- */
 export function r01ConcurrentSet(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

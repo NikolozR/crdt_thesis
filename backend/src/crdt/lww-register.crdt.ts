@@ -15,15 +15,6 @@ export interface LwwRegisterStateView {
   readonly actorId: string | null;
 }
 
-/**
- * Last-Writer-Wins Register.
- *
- * Why this works:
- * - Each write carries a logical timestamp.
- * - Replicas deterministically choose the max timestamp.
- * - For equal timestamps (possible in distributed systems), we use actorId
- *   as a deterministic tie-breaker to avoid divergence.
- */
 export class LwwRegisterCrdt
   implements ICRDT<LwwLocalOperation, LwwSyncPayload, LwwRegisterStateView>
 {

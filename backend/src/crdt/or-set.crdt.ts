@@ -20,16 +20,6 @@ export interface OrSetStateView {
   readonly elements: string[];
 }
 
-/**
- * Observed-Remove Set with Add-Wins semantics.
- *
- * Why this works:
- * - Every add gets a unique tag. The value "exists" if at least one of its add tags
- *   has not been tombstoned.
- * - A remove only tombstones tags that were observed locally at remove-time.
- * - If an add happens concurrently with remove, remove cannot tombstone that unseen tag,
- *   therefore the element survives ("add wins").
- */
 export class OrSetCrdt
   implements ICRDT<OrSetLocalOperation, OrSetSyncPayload, OrSetStateView>
 {

@@ -1,28 +1,11 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * R04 — Shared baseline value, then concurrent divergence during partition.
- *
- * Phase 1 (healthy network): Node-A sets "V1" → all nodes converge to "V1" at lamport=1.
- * Phase 2 (partition):
- *   Node-A sets "V2" → lamport=2 on Node-A only.
- *   Node-B sets "V3" → lamport=2 on Node-B only.
- *   Both are at the same logical layer relative to a shared baseline.
- *
- * LWW:  tie at lamport=2, tie-break by actorId → "Node-B" > "Node-A" → "V3" wins.
- * MV:   both writes at lamport=2 (the same maximum layer) → ["V2","V3"] retained.
- *
- * After a subsequent write from Node-C (lamport=3) the MV register should
- * collapse to a single value again.
- */
 export function r04SetBeforeAndAfterPartition(harness: SimulationHarness): ScenarioResult {
-  // Phase 1: everyone sees V1
   harness.operate('Node-A', { type: 'set', value: 'V1' });
 
   const afterBaseline = harness.snapshot();
 
-  // Phase 2: partition + concurrent writes
   harness.partition();
 
   harness.operate('Node-A', { type: 'set', value: 'V2' });
@@ -34,7 +17,6 @@ export function r04SetBeforeAndAfterPartition(harness: SimulationHarness): Scena
 
   const afterReconnect = harness.snapshot();
 
-  // Phase 3: later causal write resolves MV conflict
   harness.operate('Node-C', { type: 'set', value: 'V4' });
 
   const afterCausalWrite = harness.snapshot();

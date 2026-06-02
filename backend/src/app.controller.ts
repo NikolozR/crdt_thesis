@@ -19,10 +19,6 @@ import { SimulationService } from './simulation/simulation.service';
 import { CrdtType, NodeId, NodeOperation } from './simulation/simulation.types';
 
 class InitSimulationBody {
-  /**
-   * CRDT engines to run side-by-side on every virtual node (same operations,
-   * same sync traffic, different merge semantics).
-   */
   @ApiProperty({
     type: [String],
     enum: ['or-set', '2p-set', 'lww-register', 'mv-register'],
@@ -32,10 +28,6 @@ class InitSimulationBody {
 }
 
 class OperateNodeBody {
-  /**
-   * Operation is intentionally polymorphic: set runs use `{ type: "set" }`;
-   * set-CRDT comparisons use `{ type: "add" | "remove" }`.
-   */
   @ApiProperty({
     oneOf: [
       {

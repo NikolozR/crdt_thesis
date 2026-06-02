@@ -1,17 +1,6 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * R03 — All three nodes set different values while partitioned.
- *
- * All three writes happen at lamport=1 — a three-way tie.
- *
- * LWW-Register:  deterministic tie-break by actorId string comparison.
- *                "Node-C" > "Node-B" > "Node-A" → "Node-C"'s value "Z" wins.
- *                Two values are silently discarded.
- * MV-Register:   all three writes are at the same lamport layer → all three
- *                values are retained: ["X","Y","Z"].
- */
 export function r03TripleConcurrent(harness: SimulationHarness): ScenarioResult {
   harness.partition();
 

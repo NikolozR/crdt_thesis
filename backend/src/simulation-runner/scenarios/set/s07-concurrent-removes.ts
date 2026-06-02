@@ -1,21 +1,7 @@
 import { SimulationHarness } from '../../harness';
 import { ScenarioResult } from '../../scenario.types';
 
-/**
- * S07 — Element added on all nodes (healthy network), then two nodes concurrently
- *        remove it while partitioned.
- *
- * OR-Set:  Both removes observe the same original tag and tombstone it.
- *          After merge, tombstone set has the tag from both removes (idempotent).
- *          No live tags → "Apple" absent. Both CRDTs agree.
- * 2P-Set:  Both removes add "Apple" to the tombstone set. After merge,
- *          tombstone still has "Apple" exactly once (Set semantics).
- *          "Apple" absent.
- *
- * When all concurrent operations are removes, both CRDTs agree: element is gone.
- */
 export function s07ConcurrentRemoves(harness: SimulationHarness): ScenarioResult {
-  // Everyone gets Apple first (healthy network)
   harness.operate('Node-A', { type: 'add', value: 'Apple' });
 
   const afterInitialAdd = harness.snapshot();
