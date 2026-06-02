@@ -86,6 +86,7 @@ export class SimulationService {
       '2p-set',
       'lww-register',
       'mv-register',
+      'pw-set',
     ];
     const seen = new Set<CrdtType>();
     const unique: CrdtType[] = [];

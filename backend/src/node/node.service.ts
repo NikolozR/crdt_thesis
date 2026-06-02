@@ -11,6 +11,7 @@ import { LwwRegisterStateView } from '../crdt/lww-register.crdt';
 import { MvRegisterStateView } from '../crdt/mv-register.crdt';
 import { OrSetStateView } from '../crdt/or-set.crdt';
 import { TwoPhaseSetStateView } from '../crdt/2p-set.crdt';
+import { PwSetStateView } from '../crdt/pw-set.crdt';
 
 export interface NodeSyncMessage {
   readonly fromNodeId: NodeId;
@@ -107,10 +108,11 @@ export class NodeService {
         | OrSetStateView
         | TwoPhaseSetStateView
         | LwwRegisterStateView
-        | MvRegisterStateView;
+        | MvRegisterStateView
+        | PwSetStateView;
 
-      if (engineId === 'or-set' || engineId === '2p-set') {
-        out[engineId] = (view as OrSetStateView | TwoPhaseSetStateView).elements;
+      if (engineId === 'or-set' || engineId === '2p-set' || engineId === 'pw-set') {
+        out[engineId] = (view as OrSetStateView | TwoPhaseSetStateView | PwSetStateView).elements;
       } else if (engineId === 'lww-register') {
         const v = view as LwwRegisterStateView;
         out[engineId] = {

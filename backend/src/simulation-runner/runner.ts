@@ -13,6 +13,7 @@ import { s05ThreeWayConcurrent } from './scenarios/set/s05-three-way-concurrent'
 import { s06SequentialNoPartition } from './scenarios/set/s06-sequential-no-partition';
 import { s07ConcurrentRemoves } from './scenarios/set/s07-concurrent-removes';
 import { s08MultipleElementsMixedOps } from './scenarios/set/s08-multiple-elements-mixed-ops';
+import { s09ModeratedWorkspace } from './scenarios/set/s09-moderated-workspace';
 
 // --- Register-family scenarios ---
 import { r01ConcurrentSet } from './scenarios/register/r01-concurrent-set';
@@ -40,6 +41,7 @@ const SCENARIOS: ScenarioEntry[] = [
   { fn: s06SequentialNoPartition,        crdts: SET_CRDTS },
   { fn: s07ConcurrentRemoves,            crdts: SET_CRDTS },
   { fn: s08MultipleElementsMixedOps,     crdts: SET_CRDTS },
+  { fn: s09ModeratedWorkspace,           crdts: ['pw-set'] },
   // Register family
   { fn: r01ConcurrentSet,                crdts: REGISTER_CRDTS },
   { fn: r02SequentialNoPartition,        crdts: REGISTER_CRDTS },

@@ -1,7 +1,7 @@
-export type CrdtType = 'or-set' | '2p-set' | 'lww-register' | 'mv-register';
+export type CrdtType = 'or-set' | '2p-set' | 'lww-register' | 'mv-register' | 'pw-set';
 
 /** CRDTs that use add/remove local operations (set family). */
-export const SET_CRDT_TYPES: readonly CrdtType[] = ['or-set', '2p-set'];
+export const SET_CRDT_TYPES: readonly CrdtType[] = ['or-set', '2p-set', 'pw-set'];
 
 /** CRDTs that use `set` local operations (register family). */
 export const REGISTER_CRDT_TYPES: readonly CrdtType[] = [
@@ -30,7 +30,25 @@ export interface LwwSetOperation {
 
 export type LwwLocalOperation = LwwSetOperation;
 
-export type NodeOperation = OrSetLocalOperation | LwwLocalOperation;
+/**
+ * Priority-Wins Set operation. The `weight` encodes the authority of the actor
+ * (e.g. admin = 100, regular user = 10). Higher weight wins on conflict.
+ */
+export interface PwSetAddOperation {
+  readonly type: 'add';
+  readonly value: string;
+  readonly weight: number;
+}
+
+export interface PwSetRemoveOperation {
+  readonly type: 'remove';
+  readonly value: string;
+  readonly weight: number;
+}
+
+export type PwSetLocalOperation = PwSetAddOperation | PwSetRemoveOperation;
+
+export type NodeOperation = OrSetLocalOperation | LwwLocalOperation | PwSetLocalOperation;
 
 export function isSetFamilyCrdt(type: CrdtType): boolean {
   return (SET_CRDT_TYPES as readonly string[]).includes(type);
