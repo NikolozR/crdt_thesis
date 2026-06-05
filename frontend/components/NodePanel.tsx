@@ -82,8 +82,10 @@ export default function NodePanel({
   onOperate,
 }: Props) {
   const [value, setValue] = useState('');
+  const [weight, setWeight] = useState('10');
 
   const isSetFamily = activeCrdts.some((c) => c === 'or-set' || c === '2p-set' || c === 'pw-set');
+  const hasPwSet = activeCrdts.includes('pw-set');
   const ops = isSetFamily ? SET_OPS : REGISTER_OPS;
 
   const nodeLabel = nodeId.replace('Node-', '');
@@ -156,12 +158,47 @@ export default function NodePanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter' && value.trim() && !disabled) {
                 const defaultOp = ops[0];
-                onOperate(nodeId, { type: defaultOp, value: value.trim() } as NodeOperation);
+                const w = hasPwSet ? Number(weight) || 1 : undefined;
+                onOperate(nodeId, { type: defaultOp, value: value.trim(), ...(w !== undefined && { weight: w }) } as NodeOperation);
                 setValue('');
               }
             }}
             className="w-full mb-2 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm border border-zinc-600 focus:outline-none focus:border-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
           />
+
+          {hasPwSet && (
+            <div className="flex items-center gap-2 mb-2">
+              <label className="text-xs text-amber-400 font-semibold shrink-0" title="Weight used by PW-Set to resolve conflicts. Higher weight wins. Other CRDTs ignore this field.">
+                ★ weight
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={weight}
+                disabled={disabled}
+                onChange={(e) => setWeight(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-md bg-zinc-700 text-amber-300 placeholder-zinc-500 text-sm border border-amber-800 focus:outline-none focus:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed font-mono"
+              />
+              <div className="flex gap-1 shrink-0">
+                {[10, 50, 100].map((w) => (
+                  <button
+                    key={w}
+                    disabled={disabled}
+                    onClick={() => setWeight(String(w))}
+                    title={`Set weight to ${w}`}
+                    className={`cursor-pointer px-2 py-1 rounded text-xs font-mono transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                      weight === String(w)
+                        ? 'bg-amber-700 text-amber-100'
+                        : 'bg-zinc-700 text-zinc-400 hover:bg-zinc-600'
+                    }`}
+                  >
+                    {w}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2">
             {ops.map((op) => (
               <button
@@ -173,13 +210,14 @@ export default function NodePanel({
                     : !value.trim()
                     ? 'Enter a value above first'
                     : op === 'add'
-                    ? `Add "${value.trim()}" to this node's local set`
+                    ? `Add "${value.trim()}"${hasPwSet ? ` with weight ${weight}` : ''}`
                     : op === 'remove'
-                    ? `Remove "${value.trim()}" from this node's local set`
+                    ? `Remove "${value.trim()}"${hasPwSet ? ` with weight ${weight}` : ''}`
                     : `Set this node's register to "${value.trim()}"`
                 }
                 onClick={() => {
-                  onOperate(nodeId, { type: op, value: value.trim() } as NodeOperation);
+                  const w = hasPwSet ? Number(weight) || 1 : undefined;
+                  onOperate(nodeId, { type: op, value: value.trim(), ...(w !== undefined && { weight: w }) } as NodeOperation);
                   setValue('');
                 }}
                 className={`cursor-pointer flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${

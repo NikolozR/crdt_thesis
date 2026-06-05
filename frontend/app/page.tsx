@@ -1,12 +1,12 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import ActivityLog from '@/components/ActivityLog';
 import NodePanel from '@/components/NodePanel';
 import ScenarioRunner from '@/components/ScenarioRunner';
 import SetupBar from '@/components/SetupBar';
 import { useScenarioRunner } from '@/hooks/useScenarioRunner';
-import { api } from '@/lib/api';
+import { api, SimulationResetError } from '@/lib/api';
 import {
   CrdtType,
   LogEntry,
@@ -39,6 +39,24 @@ export default function Home() {
     setLog((prev) => [...prev, entry]);
   }, []);
 
+  const resetScenarioRef = useRef<() => void>(() => {});
+
+  function handleSimulationReset() {
+    setActiveCrdts([]);
+    setNetwork(null);
+    setNodes(null);
+    resetScenarioRef.current();
+    addLog(makeLog('error', 'Backend restarted — simulation state lost. Please re-initialize.'));
+  }
+
+  function handleError(e: unknown) {
+    if (e instanceof SimulationResetError) {
+      handleSimulationReset();
+    } else {
+      addLog(makeLog('error', e instanceof Error ? e.message : String(e)));
+    }
+  }
+
   function applyState(state: SimulationState) {
     setNetwork(state.network);
     setNodes(state.nodes as Record<NodeId, NodeState>);
@@ -53,7 +71,7 @@ export default function Home() {
       applyState(state);
       addLog(makeLog('init', `Initialized with [${res.compare.join(', ')}]`));
     } catch (e) {
-      addLog(makeLog('error', String(e)));
+      handleError(e);
     } finally {
       setLoading(false);
     }
@@ -67,7 +85,7 @@ export default function Home() {
       applyState(state);
       addLog(makeLog('partition', 'Network partitioned — messages queued'));
     } catch (e) {
-      addLog(makeLog('error', String(e)));
+      handleError(e);
     } finally {
       setLoading(false);
     }
@@ -81,7 +99,7 @@ export default function Home() {
       applyState(state);
       addLog(makeLog('reconnect', 'Network reconnected — queued messages flushed'));
     } catch (e) {
-      addLog(makeLog('error', String(e)));
+      handleError(e);
     } finally {
       setLoading(false);
     }
@@ -99,7 +117,7 @@ export default function Home() {
         ),
       );
     } catch (e) {
-      addLog(makeLog('error', String(e)));
+      handleError(e);
     } finally {
       setLoading(false);
     }
@@ -111,6 +129,8 @@ export default function Home() {
     onReconnect: handleReconnect,
     onOperate: handleOperate,
   });
+
+  resetScenarioRef.current = runner.reset;
 
   const initialized = nodes !== null;
   const isPartitioned = network?.isPartitioned ?? false;
