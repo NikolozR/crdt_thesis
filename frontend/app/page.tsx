@@ -149,19 +149,54 @@ export default function Home() {
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Node panels */}
-        <div className="flex-1 grid grid-cols-3 gap-4 p-4 overflow-auto">
-          {NODE_IDS.map((nodeId) => (
-            <NodePanel
-              key={nodeId}
-              nodeId={nodeId}
-              state={nodes?.[nodeId] ?? null}
-              activeCrdts={activeCrdts}
-              isPartitioned={isPartitioned}
-              disabled={manualDisabled}
-              allNodesState={nodes}
-              onOperate={handleOperate}
-            />
-          ))}
+        <div className="flex-1 overflow-auto">
+          {!initialized ? (
+            <div className="flex flex-col items-center justify-center h-full gap-8 px-8 text-center">
+              <div>
+                <h2 className="text-xl font-bold text-zinc-100 mb-2">Welcome to the CRDT Simulator</h2>
+                <p className="text-zinc-400 text-sm max-w-lg">
+                  This tool lets you observe how different Conflict-Free Replicated Data Types behave
+                  under network partitions. Choose a CRDT family above to begin.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 text-left">
+                {[
+                  { step: '1', title: 'Initialize', desc: 'Pick a CRDT family above. Three virtual nodes (A, B, C) will be created.' },
+                  { step: '2', title: 'Partition', desc: 'Click "Partition network" to isolate nodes. Operations will queue instead of syncing.' },
+                  { step: '3', title: 'Operate', desc: 'Add or remove values on individual nodes. Watch states diverge.' },
+                  { step: '4', title: 'Reconnect', desc: 'Click "Reconnect network" to flush queued messages and observe how nodes converge.' },
+                ].map(({ step, title, desc }) => (
+                  <div key={step} className="flex gap-3 max-w-[180px]">
+                    <span className="shrink-0 w-7 h-7 rounded-full bg-indigo-700 text-indigo-100 text-xs font-bold flex items-center justify-center mt-0.5">
+                      {step}
+                    </span>
+                    <div>
+                      <p className="text-zinc-100 text-sm font-semibold">{title}</p>
+                      <p className="text-zinc-500 text-xs mt-0.5">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-zinc-600 text-xs">
+                Or use the <span className="text-indigo-400 font-medium">Guided</span> scenarios above to walk through a predefined demo step by step.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4 p-4 h-full">
+              {NODE_IDS.map((nodeId) => (
+                <NodePanel
+                  key={nodeId}
+                  nodeId={nodeId}
+                  state={nodes?.[nodeId] ?? null}
+                  activeCrdts={activeCrdts}
+                  isPartitioned={isPartitioned}
+                  disabled={manualDisabled}
+                  allNodesState={nodes}
+                  onOperate={handleOperate}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Activity log sidebar */}

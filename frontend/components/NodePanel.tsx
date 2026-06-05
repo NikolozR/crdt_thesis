@@ -54,7 +54,7 @@ function renderValue(crdtType: CrdtType, value: unknown): React.ReactNode {
 
   if (Array.isArray(value)) {
     if (value.length === 0)
-      return <span className="text-zinc-500 italic">[]</span>;
+      return <span className="text-zinc-500 italic">∅ (empty set)</span>;
     return (
       <div className="flex flex-wrap gap-1">
         {(value as string[]).map((v) => (
@@ -96,7 +96,10 @@ export default function NodePanel({
           Node-<span className="text-indigo-400">{nodeLabel}</span>
         </span>
         {isPartitioned && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 border border-red-800">
+          <span
+            title="This node is cut off from the others. Operations it performs will be queued and not delivered until the network reconnects."
+            className="cursor-help text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 border border-red-800"
+          >
             isolated
           </span>
         )}
@@ -105,7 +108,9 @@ export default function NodePanel({
       {/* State per engine */}
       <div className="flex-1 px-4 py-3 space-y-3">
         {state === null ? (
-          <p className="text-zinc-500 text-sm italic">Not initialised</p>
+          <p className="text-zinc-500 text-sm italic">
+            Not initialised — click <span className="text-indigo-400 not-italic font-medium">Start</span> above
+          </p>
         ) : (
           activeCrdts.map((crdtType) => {
             const diverged = isDiverged(crdtType, allNodesState);
@@ -114,7 +119,10 @@ export default function NodePanel({
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-mono text-zinc-400">{crdtType}</span>
                   {diverged && (
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-800">
+                    <span
+                      title="This CRDT's state differs between nodes right now — they haven't merged yet. Reconnect the network to converge."
+                      className="cursor-help text-xs px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-800"
+                    >
                       diverged
                     </span>
                   )}
@@ -133,10 +141,17 @@ export default function NodePanel({
         <div className="px-4 py-3 border-t border-zinc-700 bg-zinc-800/50">
           <input
             type="text"
-            placeholder="value…"
+            placeholder={isSetFamily ? 'element value (e.g. Apple)' : 'new value (e.g. V2)'}
             value={value}
             disabled={disabled}
             onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && value.trim() && !disabled) {
+                const defaultOp = ops[0];
+                onOperate(nodeId, { type: defaultOp, value: value.trim() } as NodeOperation);
+                setValue('');
+              }
+            }}
             className="w-full mb-2 px-3 py-1.5 rounded-md bg-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm border border-zinc-600 focus:outline-none focus:border-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
           />
           <div className="flex gap-2">
@@ -144,11 +159,22 @@ export default function NodePanel({
               <button
                 key={op}
                 disabled={disabled || !value.trim()}
+                title={
+                  disabled
+                    ? 'Manual operations are disabled during a guided scenario'
+                    : !value.trim()
+                    ? 'Enter a value above first'
+                    : op === 'add'
+                    ? `Add "${value.trim()}" to this node's local set`
+                    : op === 'remove'
+                    ? `Remove "${value.trim()}" from this node's local set`
+                    : `Set this node's register to "${value.trim()}"`
+                }
                 onClick={() => {
                   onOperate(nodeId, { type: op, value: value.trim() } as NodeOperation);
                   setValue('');
                 }}
-                className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`cursor-pointer flex-1 py-1.5 rounded-md text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                   op === 'remove'
                     ? 'bg-red-800 hover:bg-red-700 text-red-100'
                     : op === 'add'

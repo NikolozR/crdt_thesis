@@ -19,9 +19,19 @@ export default function SetupBar({
   onPartition,
   onReconnect,
 }: Props) {
-  const families: { label: string; family: CrdtFamily; crdts: CrdtType[] }[] = [
-    { label: 'OR-Set vs 2P-Set  (sets)', family: 'set', crdts: SET_CRDTS },
-    { label: 'LWW vs MV-Register  (registers)', family: 'register', crdts: REGISTER_CRDTS },
+  const families: { label: string; family: CrdtFamily; crdts: CrdtType[]; tooltip: string }[] = [
+    {
+      label: 'OR-Set vs 2P-Set',
+      family: 'set',
+      crdts: SET_CRDTS,
+      tooltip: 'Compare add-wins (OR-Set) vs remove-wins (2P-Set) semantics under partition',
+    },
+    {
+      label: 'LWW vs MV-Register',
+      family: 'register',
+      crdts: REGISTER_CRDTS,
+      tooltip: 'Compare last-writer-wins (LWW, lossy) vs multi-value (MV, conflict-preserving) registers',
+    },
   ];
 
   const isPartitioned = network?.isPartitioned ?? false;
@@ -29,16 +39,18 @@ export default function SetupBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3 px-6 py-4 bg-zinc-900 border-b border-zinc-700">
+
       {/* CRDT family selector */}
       <div className="flex gap-2">
-        {families.map(({ label, crdts }) => (
+        {families.map(({ label, crdts, tooltip }) => (
           <button
             key={label}
             onClick={() => onInit(crdts)}
             disabled={disabled}
-            className="px-4 py-2 rounded-md text-sm font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            title={tooltip}
+            className="cursor-pointer px-4 py-2 rounded-md text-sm font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Init: {label}
+            {initialized ? 'Re-init:' : 'Start:'} {label}
           </button>
         ))}
       </div>
@@ -50,7 +62,12 @@ export default function SetupBar({
       {initialized && (
         <>
           <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+            title={
+              isPartitioned
+                ? `Network is partitioned — ${queued} message(s) queued. Click "Reconnect" to flush them.`
+                : 'Network is healthy — all messages are delivered immediately.'
+            }
+            className={`cursor-default flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
               isPartitioned
                 ? 'bg-red-900/60 text-red-300 border border-red-700'
                 : 'bg-emerald-900/60 text-emerald-300 border border-emerald-700'
@@ -58,7 +75,7 @@ export default function SetupBar({
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                isPartitioned ? 'bg-red-400' : 'bg-emerald-400'
+                isPartitioned ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'
               }`}
             />
             {isPartitioned ? `PARTITIONED  (${queued} queued)` : 'HEALTHY'}
@@ -68,7 +85,8 @@ export default function SetupBar({
             <button
               onClick={onPartition}
               disabled={disabled}
-              className="px-4 py-2 rounded-md text-sm font-medium bg-red-800 hover:bg-red-700 text-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Isolate all nodes — outgoing sync messages will be queued instead of delivered"
+              className="cursor-pointer px-4 py-2 rounded-md text-sm font-medium bg-red-800 hover:bg-red-700 text-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Partition network
             </button>
@@ -76,12 +94,19 @@ export default function SetupBar({
             <button
               onClick={onReconnect}
               disabled={disabled}
-              className="px-4 py-2 rounded-md text-sm font-medium bg-emerald-800 hover:bg-emerald-700 text-emerald-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Reconnect all nodes and flush the queued messages — observe how states converge"
+              className="cursor-pointer px-4 py-2 rounded-md text-sm font-medium bg-emerald-800 hover:bg-emerald-700 text-emerald-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Reconnect network
             </button>
           )}
         </>
+      )}
+
+      {disabled && (
+        <span className="text-xs text-zinc-500 italic ml-auto">
+          Manual controls disabled during guided scenario
+        </span>
       )}
     </div>
   );
