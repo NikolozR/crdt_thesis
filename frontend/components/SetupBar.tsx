@@ -1,6 +1,6 @@
 'use client';
 
-import { CrdtFamily, CrdtType, NetworkState, REGISTER_CRDTS, SET_CRDTS } from '@/lib/types';
+import { ALL_SET_CRDTS, CrdtFamily, CrdtType, NetworkState, REGISTER_CRDTS, SET_CRDTS } from '@/lib/types';
 
 interface Props {
   initialized: boolean;
@@ -19,7 +19,7 @@ export default function SetupBar({
   onPartition,
   onReconnect,
 }: Props) {
-  const families: { label: string; family: CrdtFamily; crdts: CrdtType[]; tooltip: string }[] = [
+  const families: { label: string; family: CrdtFamily; crdts: CrdtType[]; tooltip: string; custom?: boolean }[] = [
     {
       label: 'OR-Set vs 2P-Set',
       family: 'set',
@@ -32,6 +32,14 @@ export default function SetupBar({
       crdts: REGISTER_CRDTS,
       tooltip: 'Compare last-writer-wins (LWW, lossy) vs multi-value (MV, conflict-preserving) registers',
     },
+    {
+      label: 'OR-Set vs 2P-Set vs PW-Set ★',
+      family: 'set',
+      crdts: ALL_SET_CRDTS,
+      tooltip: 'PW-Set is the custom CRDT designed for this thesis — priority-weighted conflict resolution. ' +
+               'Higher weight wins regardless of add vs remove. Compares all three set policies side-by-side.',
+      custom: true,
+    },
   ];
 
   const isPartitioned = network?.isPartitioned ?? false;
@@ -42,13 +50,17 @@ export default function SetupBar({
 
       {/* CRDT family selector */}
       <div className="flex gap-2">
-        {families.map(({ label, crdts, tooltip }) => (
+        {families.map(({ label, crdts, tooltip, custom }) => (
           <button
             key={label}
             onClick={() => onInit(crdts)}
             disabled={disabled}
             title={tooltip}
-            className="cursor-pointer px-4 py-2 rounded-md text-sm font-medium bg-zinc-700 hover:bg-zinc-600 text-zinc-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className={`cursor-pointer px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+              custom
+                ? 'bg-amber-800 hover:bg-amber-700 text-amber-100 ring-1 ring-amber-600'
+                : 'bg-zinc-700 hover:bg-zinc-600 text-zinc-100'
+            }`}
           >
             {initialized ? 'Re-init:' : 'Start:'} {label}
           </button>

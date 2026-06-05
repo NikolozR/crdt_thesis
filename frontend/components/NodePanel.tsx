@@ -118,6 +118,14 @@ export default function NodePanel({
               <div key={crdtType}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-mono text-zinc-400">{crdtType}</span>
+                  {crdtType === 'pw-set' && (
+                    <span
+                      title="PW-Set is the custom CRDT designed for this thesis. It uses numerical weights to resolve conflicts — higher weight wins, regardless of add vs remove order."
+                      className="cursor-help text-xs px-1.5 py-0.5 rounded bg-amber-900/50 text-amber-300 border border-amber-700 font-semibold"
+                    >
+                      ★ custom
+                    </span>
+                  )}
                   {diverged && (
                     <span
                       title="This CRDT's state differs between nodes right now — they haven't merged yet. Reconnect the network to converge."

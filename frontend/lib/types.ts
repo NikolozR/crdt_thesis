@@ -3,6 +3,7 @@ export type NodeId = 'Node-A' | 'Node-B' | 'Node-C';
 export type CrdtFamily = 'set' | 'register';
 
 export const SET_CRDTS: CrdtType[] = ['or-set', '2p-set'];
+export const ALL_SET_CRDTS: CrdtType[] = ['or-set', '2p-set', 'pw-set'];
 export const REGISTER_CRDTS: CrdtType[] = ['lww-register', 'mv-register'];
 
 /**

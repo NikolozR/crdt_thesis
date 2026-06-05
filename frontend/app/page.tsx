@@ -123,8 +123,18 @@ export default function Home() {
         <div className="flex items-center gap-3">
           <span className="text-lg font-bold tracking-tight">CRDT Simulation</span>
           {activeCrdts.length > 0 && (
-            <span className="text-xs text-zinc-400 font-mono">
-              [{activeCrdts.join(', ')}]
+            <span className="text-xs text-zinc-400 font-mono flex items-center gap-1">
+              [
+              {activeCrdts.map((c, i) => (
+                <span key={c}>
+                  {c === 'pw-set'
+                    ? <span className="text-amber-400 font-semibold">{c} ★</span>
+                    : <span>{c}</span>
+                  }
+                  {i < activeCrdts.length - 1 && ', '}
+                </span>
+              ))}
+              ]
             </span>
           )}
         </div>
@@ -178,7 +188,9 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-zinc-600 text-xs">
-                Or use the <span className="text-indigo-400 font-medium">Guided</span> scenarios above to walk through a predefined demo step by step.
+                To see the custom <span className="text-amber-400 font-medium">PW-Set ★</span> in action,
+                use the amber <span className="text-amber-400 font-medium">Start: OR-Set vs 2P-Set vs PW-Set ★</span> button,
+                or load the <span className="text-indigo-400 font-medium">Guided → The Troll Problem</span> scenario.
               </p>
             </div>
           ) : (
